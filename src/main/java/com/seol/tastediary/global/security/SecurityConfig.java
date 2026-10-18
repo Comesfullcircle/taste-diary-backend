@@ -64,8 +64,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/signup", "/api/auth/login").permitAll()
-                        // 기록 소유권 연결 전까지 기존 로컬 CRUD의 접근 정책을 유지한다.
-                        .requestMatchers("/api/entries", "/api/entries/**").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(errorHandler).accessDeniedHandler(errorHandler))

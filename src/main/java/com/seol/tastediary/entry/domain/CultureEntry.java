@@ -24,6 +24,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Objects;
 
 @Entity
 @Table(name = "culture_entries")
@@ -34,6 +35,10 @@ public class CultureEntry {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @NotNull
+    @Column(name = "member_id", nullable = false, updatable = false)
+    private Long memberId;
 
     @NotBlank
     @Size(max = 200)
@@ -72,8 +77,9 @@ public class CultureEntry {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    public CultureEntry(String title, Category category, LocalDate experiencedOn,
+    public CultureEntry(Long memberId, String title, Category category, LocalDate experiencedOn,
                         String review, BigDecimal rating, BigDecimal expenseAmount) {
+        this.memberId = Objects.requireNonNull(memberId, "작성자는 필수입니다.");
         update(title, category, experiencedOn, review, rating, expenseAmount);
     }
 

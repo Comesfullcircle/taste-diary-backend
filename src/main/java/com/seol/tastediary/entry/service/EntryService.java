@@ -8,6 +8,8 @@ import com.seol.tastediary.entry.dto.EntryListResponse;
 import com.seol.tastediary.entry.dto.EntryUpdateRequest;
 import com.seol.tastediary.entry.repository.EntryRepository;
 import com.seol.tastediary.global.exception.EntryNotFoundException;
+import com.seol.tastediary.member.repository.MemberRepository;
+import org.springframework.security.authentication.BadCredentialsException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -19,19 +21,20 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class EntryService {
     private final EntryRepository entryRepository;
+    private final MemberRepository memberRepository;
 
     @Transactional
-    public EntryResponse create(EntryCreateRequest request) {
-        CultureEntry entry = new CultureEntry(request.title(), request.category(),
+    public EntryResponse create(String email, EntryCreateRequest request) {
+        CultureEntry entry = new CultureEntry(getMemberId(email), request.title(), request.category(),
                 request.experiencedOn(), request.review(), request.rating(), request.expenseAmount());
         return EntryResponse.from(entryRepository.save(entry));
     }
 
-    public EntryResponse findById(Long id) {
-        return EntryResponse.from(getEntry(id));
+    public EntryResponse findById(String email, Long id) {
+        return EntryResponse.from(getEntry(id, getMemberId(email)));
     }
 
-    public EntryListResponse findAll(int page, int size, String keyword, Category category) {
+    public EntryListResponse findAll(String email, int page, int size, String keyword, Category category) {
         PageRequest pageable = PageRequest.of(page, size,
                 Sort.by(Sort.Direction.DESC, "experiencedOn", "id"));
         String pattern = "%";
@@ -40,13 +43,13 @@ public class EntryService {
                     .replace("%", "!%").replace("_", "!_");
             pattern = "%" + escaped + "%";
         }
-        return EntryListResponse.from(entryRepository.search(pattern, category, pageable)
+        return EntryListResponse.from(entryRepository.search(getMemberId(email), pattern, category, pageable)
                 .map(EntryResponse::from));
     }
 
     @Transactional
-    public EntryResponse update(Long id, EntryUpdateRequest request) {
-        CultureEntry entry = getEntry(id);
+    public EntryResponse update(String email, Long id, EntryUpdateRequest request) {
+        CultureEntry entry = getEntry(id, getMemberId(email));
         entry.update(request.title(), request.category(), request.experiencedOn(),
                 request.review(), request.rating(), request.expenseAmount());
         entryRepository.flush();
@@ -54,11 +57,18 @@ public class EntryService {
     }
 
     @Transactional
-    public void delete(Long id) {
-        entryRepository.delete(getEntry(id));
+    public void delete(String email, Long id) {
+        entryRepository.delete(getEntry(id, getMemberId(email)));
     }
 
-    private CultureEntry getEntry(Long id) {
-        return entryRepository.findById(id).orElseThrow(() -> new EntryNotFoundException(id));
+    private CultureEntry getEntry(Long id, Long memberId) {
+        return entryRepository.findByIdAndMemberId(id, memberId)
+                .orElseThrow(() -> new EntryNotFoundException(id));
+    }
+
+    private Long getMemberId(String email) {
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new BadCredentialsException("인증 정보를 확인해 주세요."))
+                .getId();
     }
 }

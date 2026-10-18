@@ -1,9 +1,13 @@
 package com.seol.tastediary.entry.controller;
 
 import com.seol.tastediary.entry.repository.EntryRepository;
+import com.seol.tastediary.member.domain.Member;
+import com.seol.tastediary.member.repository.MemberRepository;
+import org.springframework.security.test.context.support.WithMockUser;
 import com.seol.tastediary.entry.domain.Category;
 import com.seol.tastediary.entry.domain.CultureEntry;
 import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -36,7 +40,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+@WithMockUser(username = "entry-test@example.com")
 class EntryControllerTests {
+    @Autowired
+    private MemberRepository memberRepository;
+
+    private Long memberId;
+
     private static final String VALID_REQUEST = """
             {
               "title": "영화 관람",
@@ -56,6 +66,11 @@ class EntryControllerTests {
 
     @Autowired
     private EntityManager entityManager;
+
+    @BeforeEach
+    void setUp() {
+        memberId = memberRepository.saveAndFlush(new Member("entry-test@example.com", "test-hash")).getId();
+    }
 
     @Test
     @DisplayName("작성 후 Location으로 상세 조회")
@@ -317,7 +332,7 @@ class EntryControllerTests {
     }
 
     private CultureEntry saveEntry(String title, LocalDate date) {
-        return entryRepository.saveAndFlush(new CultureEntry(title, Category.BOOK,
+        return entryRepository.saveAndFlush(new CultureEntry(memberId, title, Category.BOOK,
                 date, null, null, BigDecimal.ZERO));
     }
 }

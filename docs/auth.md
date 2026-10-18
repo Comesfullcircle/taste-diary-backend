@@ -5,8 +5,8 @@
 이메일·비밀번호 가입, 로그인, 로그아웃, 내 정보 조회를 구현했다.
 회원가입만으로 로그인되지는 않으며, 가입 후 별도로 로그인해야 한다.
 
-기록의 작성자 연결과 접근 제한은 다음 작업이다.
-현재 기록 API는 여전히 사용자 구분 없이 동작하므로 인증 기능 전체가 완성된 단계는 아니다.
+기록은 로그인한 회원을 작성자로 저장하며 본인 기록만 조회·수정·삭제할 수 있다.
+목록과 검색의 결과·페이지 집계에서도 다른 회원의 기록은 제외한다.
 
 ## API
 
@@ -93,7 +93,7 @@ React 웹을 먼저 구현하므로 Spring Security의 서버 세션 인증을 �
 provider와 providerUserId 조합으로 계정을 구분하고, 이메일이 같다는 이유만으로 기존 회원과 자동 병합하지 않는다.
 이번 변경에는 소셜 계정 테이블이나 Google·Apple·Kakao 연동을 포함하지 않았다.
 
-다음 단계는 기록의 작성자를 회원 ID로 연결하고, 모든 기록 조회·수정·삭제에 소유자 조건을 적용하는 것이다.
+기록 소유권 설계와 마이그레이션 내용은 [기록 소유권 개발 기록](entry-ownership.md)에 정리했다.
 
 참고: [Spring Security 세션 관리](https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html),
 [CSRF 보호](https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html)

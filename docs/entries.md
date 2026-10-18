@@ -4,8 +4,11 @@
 
 기본 주소: `http://localhost:8080`
 
+모든 기록 API는 로그인이 필요하며 로그인한 회원의 기록만 다룬다.
 POST·PUT·DELETE 요청에는 세션 쿠키와 CSRF 토큰이 필요하다.
 발급·사용 방법은 [인증 API 문서](auth.md)를 참고한다.
+작성자는 서버가 로그인 정보로 결정하므로 요청에 memberId를 보내지 않는다.
+수정 요청으로 작성자를 변경할 수 없다.
 
 ## API
 
@@ -47,6 +50,7 @@ PUT은 기록 전체를 수정한다. 필수 항목은 모두 전달해야 하�
 
 페이지 번호는 0부터 시작하며 기본 크기는 20, 허용 크기는 1~100이다.
 경험한 날짜 내림차순, 같은 날짜에서는 ID 내림차순으로 정렬한다.
+목록·검색 결과와 totalElements·totalPages는 본인 기록만 기준으로 계산한다.
 
 ```json
 {
@@ -80,7 +84,9 @@ GET /api/entries?keyword=영화&category=MOVIE&page=0&size=20
 ## 오류
 
 - 400: 입력 검증 실패 (`INVALID_INPUT`), 잘못된 JSON·타입 (`INVALID_REQUEST`)
-- 404: 존재하지 않는 기록 조회·수정·삭제 (`ENTRY_NOT_FOUND`)
+- 401: 로그인하지 않은 기록 API 요청 (`UNAUTHORIZED`)
+- 403: 로그인했지만 변경 요청의 CSRF 토큰이 누락되거나 잘못된 경우 (`INVALID_CSRF_TOKEN`)
+- 404: 존재하지 않거나 다른 회원 소유인 기록 조회·수정·삭제 (`ENTRY_NOT_FOUND`)
 
 ```json
 {
@@ -93,5 +99,4 @@ GET /api/entries?keyword=영화&category=MOVIE&page=0&size=20
 ```
 
 필드별 오류가 없는 경우 errors는 빈 배열이다.
-회원 인증 API는 추가됐지만 기록 소유권은 아직 연결하지 않았다.
-현재 기록 API는 로그인 여부와 관계없이 사용자 구분 없이 동작한다.
+다른 회원의 기록 존재 여부를 노출하지 않도록 타인 기록도 404로 처리한다.

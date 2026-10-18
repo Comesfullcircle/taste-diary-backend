@@ -1,6 +1,9 @@
 package com.seol.tastediary.entry.domain;
 
 import jakarta.persistence.EntityManager;
+import com.seol.tastediary.member.domain.Member;
+import com.seol.tastediary.member.repository.MemberRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +21,24 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class CultureEntryPersistenceTests {
 
     @Autowired
+    private MemberRepository memberRepository;
+
+    private Long memberId;
+
+    @BeforeEach
+    void setUp() {
+        memberId = memberRepository.saveAndFlush(new Member(
+                "domain-test@example.com", "test-hash")).getId();
+    }
+
+
+    @Autowired
     private EntityManager entityManager;
 
     @Test
     @DisplayName("기록 저장 및 조회")
     void saveAndFind() {
-        CultureEntry entry = new CultureEntry("영화 관람", Category.MOVIE,
+        CultureEntry entry = new CultureEntry(memberId, "영화 관람", Category.MOVIE,
                 LocalDate.of(2026, 1, 1), "여운이 남았다", new BigDecimal("4.5"),
                 new BigDecimal("15000"));
 
@@ -45,7 +60,7 @@ class CultureEntryPersistenceTests {
     @Test
     @DisplayName("감상·평점 없이 무료 활동 저장")
     void saveWithoutReviewAndRating() {
-        CultureEntry entry = new CultureEntry("무료 전시", Category.EXHIBITION,
+        CultureEntry entry = new CultureEntry(memberId, "무료 전시", Category.EXHIBITION,
                 LocalDate.of(2026, 1, 1), null, null, BigDecimal.ZERO);
 
         entityManager.persist(entry);
@@ -61,7 +76,7 @@ class CultureEntryPersistenceTests {
     @Test
     @DisplayName("0.5점 단위가 아닌 평점 거부")
     void rejectInvalidRatingStep() {
-        assertThatThrownBy(() -> new CultureEntry("영화", Category.MOVIE,
+        assertThatThrownBy(() -> new CultureEntry(memberId, "영화", Category.MOVIE,
                 LocalDate.of(2026, 1, 1), null, new BigDecimal("4.3"), BigDecimal.ZERO))
                 .isInstanceOf(IllegalArgumentException.class);
     }
