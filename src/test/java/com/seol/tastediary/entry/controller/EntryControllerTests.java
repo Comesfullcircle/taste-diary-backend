@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -60,7 +61,7 @@ class EntryControllerTests {
     @DisplayName("작성 후 Location으로 상세 조회")
     void createAndFind() throws Exception {
         String location = mockMvc.perform(post("/api/entries")
-                        .contentType(MediaType.APPLICATION_JSON).content(VALID_REQUEST))
+                        .with(csrf()).contentType(MediaType.APPLICATION_JSON).content(VALID_REQUEST))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.id").isNumber())
@@ -84,7 +85,7 @@ class EntryControllerTests {
     @Test
     @DisplayName("감상·평점 없이 무료 활동 작성")
     void createWithoutReviewAndRating() throws Exception {
-        mockMvc.perform(post("/api/entries").contentType(MediaType.APPLICATION_JSON).content("""
+        mockMvc.perform(post("/api/entries").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("""
                         {"title":"무료 전시", "category":"EXHIBITION",
                          "experiencedOn":"2026-01-01", "expenseAmount":0}
                         """))
@@ -98,7 +99,7 @@ class EntryControllerTests {
     void rejectInvalidInput(String request) throws Exception {
         long countBefore = entryRepository.count();
 
-        mockMvc.perform(post("/api/entries").contentType(MediaType.APPLICATION_JSON).content(request))
+        mockMvc.perform(post("/api/entries").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(request))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_INPUT"))
                 .andExpect(jsonPath("$.errors").isNotEmpty());
@@ -127,7 +128,7 @@ class EntryControllerTests {
     @Test
     @DisplayName("평점 단위 오류의 필드명 확인")
     void returnRatingFieldError() throws Exception {
-        mockMvc.perform(post("/api/entries").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/api/entries").with(csrf()).contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_REQUEST.replace("4.5", "4.3")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[*].field", hasItem("rating")));
@@ -137,7 +138,7 @@ class EntryControllerTests {
     @MethodSource("unreadableRequests")
     @DisplayName("요청 형식 오류 시 400 응답")
     void rejectUnreadableRequest(String request) throws Exception {
-        mockMvc.perform(post("/api/entries").contentType(MediaType.APPLICATION_JSON).content(request))
+        mockMvc.perform(post("/api/entries").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(request))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
     }
@@ -226,7 +227,7 @@ class EntryControllerTests {
         entityManager.clear();
 
         String body = mockMvc.perform(put("/api/entries/{id}", id)
-                        .contentType(MediaType.APPLICATION_JSON).content(VALID_REQUEST))
+                        .with(csrf()).contentType(MediaType.APPLICATION_JSON).content(VALID_REQUEST))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.title").value("영화 관람"))
@@ -257,7 +258,7 @@ class EntryControllerTests {
         entryRepository.flush();
 
         mockMvc.perform(put("/api/entries/{id}", entry.getId())
-                        .contentType(MediaType.APPLICATION_JSON).content("""
+                        .with(csrf()).contentType(MediaType.APPLICATION_JSON).content("""
                         {"title":"수정 제목", "category":"BOOK",
                          "experiencedOn":"2026-01-01", "expenseAmount":0}
                         """))
@@ -278,7 +279,7 @@ class EntryControllerTests {
         Long id = entry.getId();
 
         mockMvc.perform(put("/api/entries/{id}", id)
-                        .contentType(MediaType.APPLICATION_JSON).content(request))
+                        .with(csrf()).contentType(MediaType.APPLICATION_JSON).content(request))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_INPUT"));
 
@@ -291,7 +292,7 @@ class EntryControllerTests {
     void deleteEntry() throws Exception {
         Long id = saveEntry("삭제 대상", LocalDate.of(2026, 1, 1)).getId();
 
-        mockMvc.perform(delete("/api/entries/{id}", id))
+        mockMvc.perform(delete("/api/entries/{id}", id).with(csrf()))
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(""));
 
@@ -299,18 +300,18 @@ class EntryControllerTests {
         entityManager.clear();
         assertThat(entryRepository.existsById(id)).isFalse();
         mockMvc.perform(get("/api/entries/{id}", id)).andExpect(status().isNotFound());
-        mockMvc.perform(delete("/api/entries/{id}", id)).andExpect(status().isNotFound());
+        mockMvc.perform(delete("/api/entries/{id}", id).with(csrf())).andExpect(status().isNotFound());
     }
 
     @Test
     @DisplayName("없는 기록 수정·삭제 시 404 응답")
     void rejectMissingEntry() throws Exception {
         mockMvc.perform(put("/api/entries/{id}", Long.MAX_VALUE)
-                        .contentType(MediaType.APPLICATION_JSON).content(VALID_REQUEST))
+                        .with(csrf()).contentType(MediaType.APPLICATION_JSON).content(VALID_REQUEST))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("ENTRY_NOT_FOUND"));
 
-        mockMvc.perform(delete("/api/entries/{id}", Long.MAX_VALUE))
+        mockMvc.perform(delete("/api/entries/{id}", Long.MAX_VALUE).with(csrf()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("ENTRY_NOT_FOUND"));
     }
