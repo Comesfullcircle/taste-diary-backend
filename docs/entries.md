@@ -4,6 +4,9 @@
 
 기본 주소: `http://localhost:8080`
 
+POST·PUT·DELETE 요청에는 세션 쿠키와 CSRF 토큰이 필요하다.
+발급·사용 방법은 [인증 API 문서](auth.md)를 참고한다.
+
 ## API
 
 | 메서드 | 경로 | 응답 |
@@ -90,4 +93,5 @@ GET /api/entries?keyword=영화&category=MOVIE&page=0&size=20
 ```
 
 필드별 오류가 없는 경우 errors는 빈 배열이다.
-현재 인증 기능은 없으며 로컬 단일 사용자용으로 구현되어 있다.
+회원 인증 API는 추가됐지만 기록 소유권은 아직 연결하지 않았다.
+현재 기록 API는 로그인 여부와 관계없이 사용자 구분 없이 동작한다.
