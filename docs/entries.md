@@ -57,6 +57,23 @@ PUT은 기록 전체를 수정한다. 필수 항목은 모두 전달해야 하�
 
 범위를 벗어난 페이지는 빈 content를 반환한다.
 
+### 검색과 카테고리
+
+```text
+GET /api/entries?keyword=영화
+GET /api/entries?category=MOVIE
+GET /api/entries?keyword=영화&category=MOVIE&page=0&size=20
+```
+
+- keyword: 제목 부분 일치 검색. 영문 대소문자를 구분하지 않는다.
+- 검색어 앞뒤 공백은 제거하며, 빈 문자열이나 공백만 있으면 검색 조건을 적용하지 않는다.
+- `%`, `_`, `!`는 와일드카드가 아닌 입력한 문자 그대로 검색한다.
+- category: 카테고리 enum 이름으로 조회한다. 예: `MOVIE`, `BOOK`.
+- 두 조건을 함께 보내면 모두 만족하는 기록만 조회한다.
+- 조건을 생략하면 전체 목록을 조회하며, 기존 정렬과 페이지네이션을 유지한다.
+- 일치하는 결과가 없으면 빈 content를 반환한다.
+- 정의되지 않은 카테고리는 400 (`INVALID_REQUEST`)을 반환한다.
+
 ## 오류
 
 - 400: 입력 검증 실패 (`INVALID_INPUT`), 잘못된 JSON·타입 (`INVALID_REQUEST`)
