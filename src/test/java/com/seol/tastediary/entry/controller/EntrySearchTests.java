@@ -3,6 +3,9 @@ package com.seol.tastediary.entry.controller;
 import com.seol.tastediary.entry.domain.Category;
 import com.seol.tastediary.entry.domain.CultureEntry;
 import com.seol.tastediary.entry.repository.EntryRepository;
+import com.seol.tastediary.member.domain.Member;
+import com.seol.tastediary.member.repository.MemberRepository;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,7 +27,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+@WithMockUser(username = "search-test@example.com")
 class EntrySearchTests {
+    @Autowired
+    private MemberRepository memberRepository;
+
+    private Long memberId;
+
 
     @Autowired
     private MockMvc mockMvc;
@@ -34,6 +43,7 @@ class EntrySearchTests {
 
     @BeforeEach
     void setUp() {
+        memberId = memberRepository.saveAndFlush(new Member("search-test@example.com", "test-hash")).getId();
         entryRepository.deleteAll();
         saveEntry("Dune 영화", Category.MOVIE, 1);
         saveEntry("Dune 원작", Category.BOOK, 4);
@@ -141,7 +151,7 @@ class EntrySearchTests {
     }
 
     private void saveEntry(String title, Category category, int day) {
-        entryRepository.saveAndFlush(new CultureEntry(title, category,
+        entryRepository.saveAndFlush(new CultureEntry(memberId, title, category,
                 LocalDate.of(2026, 1, day), null, null, BigDecimal.ZERO));
     }
 }
