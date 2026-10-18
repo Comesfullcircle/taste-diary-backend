@@ -7,11 +7,19 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleParameterValidation() {
+        return new ErrorResponse("INVALID_INPUT",
+                "페이지는 0 이상, 페이지 크기는 1~100이어야 합니다.", List.of());
+    }
 
     @ExceptionHandler(EntryNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
