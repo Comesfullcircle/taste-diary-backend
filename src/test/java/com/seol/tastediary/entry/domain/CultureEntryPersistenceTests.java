@@ -1,6 +1,7 @@
 package com.seol.tastediary.entry.domain;
 
 import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,7 +21,8 @@ class CultureEntryPersistenceTests {
     private EntityManager entityManager;
 
     @Test
-    void 기록을_저장하고_다시_조회한다() {
+    @DisplayName("기록 저장 및 조회")
+    void saveAndFind() {
         CultureEntry entry = new CultureEntry("영화 관람", Category.MOVIE,
                 LocalDate.of(2026, 1, 1), "여운이 남았다", new BigDecimal("4.5"),
                 new BigDecimal("15000"));
@@ -41,7 +43,8 @@ class CultureEntryPersistenceTests {
     }
 
     @Test
-    void 감상과_평점_없이_무료_활동을_기록할_수_있다() {
+    @DisplayName("감상·평점 없이 무료 활동 저장")
+    void saveWithoutReviewAndRating() {
         CultureEntry entry = new CultureEntry("무료 전시", Category.EXHIBITION,
                 LocalDate.of(2026, 1, 1), null, null, BigDecimal.ZERO);
 
@@ -56,7 +59,8 @@ class CultureEntryPersistenceTests {
     }
 
     @Test
-    void 평점은_반점_단위로만_입력한다() {
+    @DisplayName("0.5점 단위가 아닌 평점 거부")
+    void rejectInvalidRatingStep() {
         assertThatThrownBy(() -> new CultureEntry("영화", Category.MOVIE,
                 LocalDate.of(2026, 1, 1), null, new BigDecimal("4.3"), BigDecimal.ZERO))
                 .isInstanceOf(IllegalArgumentException.class);
