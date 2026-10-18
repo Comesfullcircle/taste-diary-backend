@@ -1,6 +1,7 @@
 package com.seol.tastediary.entry.service;
 
 import com.seol.tastediary.entry.domain.CultureEntry;
+import com.seol.tastediary.entry.domain.Category;
 import com.seol.tastediary.entry.dto.EntryCreateRequest;
 import com.seol.tastediary.entry.dto.EntryResponse;
 import com.seol.tastediary.entry.dto.EntryListResponse;
@@ -30,10 +31,17 @@ public class EntryService {
         return EntryResponse.from(getEntry(id));
     }
 
-    public EntryListResponse findAll(int page, int size) {
+    public EntryListResponse findAll(int page, int size, String keyword, Category category) {
         PageRequest pageable = PageRequest.of(page, size,
                 Sort.by(Sort.Direction.DESC, "experiencedOn", "id"));
-        return EntryListResponse.from(entryRepository.findAll(pageable).map(EntryResponse::from));
+        String pattern = "%";
+        if (keyword != null && !keyword.isBlank()) {
+            String escaped = keyword.strip().replace("!", "!!")
+                    .replace("%", "!%").replace("_", "!_");
+            pattern = "%" + escaped + "%";
+        }
+        return EntryListResponse.from(entryRepository.search(pattern, category, pageable)
+                .map(EntryResponse::from));
     }
 
     @Transactional
